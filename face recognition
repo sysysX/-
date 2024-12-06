@@ -1,0 +1,59 @@
+import face_recognition
+import cv2
+
+# 여러 사람의 얼굴 이미지 불러오기 및 인코딩 리스트 생성
+known_face_encodings = []
+known_face_names = []
+
+# 예시: 첫 번째 사람 이미지 로드
+image_of_person1 = face_recognition.load_image_file("person1.jpg")
+image_of_person1_encoding = face_recognition.face_encodings(image_of_person1)[0]
+known_face_encodings.append(image_of_person1_encoding)
+known_face_names.append("Person 1")
+
+# 예시: 두 번째 사람 이미지 로드
+image_of_person2 = face_recognition.load_image_file("person2.jpg")
+image_of_person2_encoding = face_recognition.face_encodings(image_of_person2)[0]
+known_face_encodings.append(image_of_person2_encoding)
+known_face_names.append("Person 2")
+
+# 예시: 세 번째 사람 이미지 로드
+image_of_person3 = face_recognition.load_image_file("person3.jpg")
+image_of_person3_encoding = face_recognition.face_encodings(image_of_person3)[0]
+known_face_encodings.append(image_of_person3_encoding)
+known_face_names.append("Person 3")
+
+# 웹캠으로 영상 캡처
+video_capture = cv2.VideoCapture(0)
+
+while True:
+    ret, frame = video_capture.read()
+
+    # 얼굴 인식
+    face_locations = face_recognition.face_locations(frame)
+    face_encodings = face_recognition.face_encodings(frame, face_locations)
+
+    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+        # 입력된 얼굴과 기존 얼굴들을 비교
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        name = "Unknown"  # 기본값은 "Unknown"으로 설정
+
+        # 일치하는 얼굴이 있으면 해당 이름을 출력
+        if True in matches:
+            first_match_index = matches.index(True)
+            name = known_face_names[first_match_index]
+
+        # 얼굴 주위에 사각형과 이름 표시
+        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+        cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+    # 영상 표시
+    cv2.imshow('Video', frame)
+
+    # 'q' 키를 눌러 종료
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# 웹캠 해제
+video_capture.release()
+cv2.destroyAllWindows()
